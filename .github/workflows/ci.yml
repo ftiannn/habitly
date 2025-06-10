@@ -38,18 +38,8 @@ jobs:
         run: |
           echo "Testing Backend with Production Environment..."
 
-          echo "=== Environment Check ==="
-          node --version
-          pwd
-          ls -la
-
           echo "Clean install dependencies..."
           npm ci
-
-          echo "Verify installations..."
-          node --version
-          npm --version
-          npx jest --version
 
           echo "Prisma schema validation..."
           npm run prisma:validate
