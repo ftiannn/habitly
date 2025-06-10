@@ -37,7 +37,14 @@ jobs:
 
         run: |
           echo "Testing Backend with Production Environment..."
-          
+
+          echo "=== Debug workspace ==="
+          pwd
+          ls -la package.json
+          cat package.json | head -5
+          npm config get prefix
+          which npm
+
           echo "=== Environment Check ==="
           node --version
           npm --version
@@ -50,14 +57,13 @@ jobs:
           echo "=== Verify TypeScript and Jest installation ==="
           npx tsc --version
           npx jest --version
-          
-          echo "=== Check critical type packages ==="
-          npm ls @types/node @types/aws-lambda @types/jsonwebtoken @types/jest
 
+          echo "=== Check critical type packages ==="
+          npm ls @types/node @types/aws-lambda @types/jsonwebtoken @types/jest --depth=0
 
           echo "Prisma schema validation..."
           npm run prisma:validate
-          
+
           echo "Prisma client generation..."
           npm run prisma:generate
                   
@@ -66,11 +72,11 @@ jobs:
 
           echo "Run test..."
           npx jest --passWithNoTests || npm run test --passWithNoTests
-          
+
           echo "Serverless package test"
           npm install -g serverless@3
           npm run package:prod
-          
+
           echo "Backend: PASS"
 
       - name: Test Frontend
@@ -82,27 +88,26 @@ jobs:
         run: |
           echo "Testing Frontend with Production Config..."
           npm ci
-          
+
           echo "TypeScript compilation..."
           npx tsc --noEmit
-          
+
           echo "Production build test..."
           npm run build
-          
+
           echo "Build verification..."
           if [ ! -d "dist" ]; then
             echo "ERROR: Build failed - no dist directory created"
             exit 1
           fi
-          
+
           echo "Build successful - $(du -sh dist/ | cut -f1)"
           echo "Files created: $(find dist -type f | wc -l)"
-          
+
           echo "Capacitor sync validation..."
           npx cap sync
-          
-          echo "Frontend tests: PASS"
 
+          echo "Frontend tests: PASS"
 
       # Test Infrastructure
       - name: Test Infrastructure
@@ -119,7 +124,7 @@ jobs:
           cd environments/prod
           terraform init -backend=false
           terraform validate
-          
+
           echo "Production plan validation..."
           terraform plan
 
@@ -132,19 +137,19 @@ jobs:
       - name: Security Checks
         run: |
           echo "Running security checks..."
-          
+
           echo "Backend security audit..."
           cd apps/backend
           npm audit --audit-level=high
           cd ../../
-          
+
           echo "Frontend security audit..."
           cd apps/frontend  
           npm audit --audit-level=high
           cd ../../
-          
+
           echo "Security checks: PASS"
-          
+
       - name: All Tests Passed
         run: |
           echo "================="
