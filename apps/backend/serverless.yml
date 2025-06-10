@@ -1,0 +1,236 @@
+service: habitly-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-southeast-1
+  memorySize: 512
+  timeout: 30
+  
+  httpApi:
+    id: ${ssm:/habitly/${self:provider.stage}/api-gateway-id}
+
+  iam:
+    role: ${ssm:/habitly/${self:provider.stage}/lambda-role-arn}
+
+  environment:
+    STAGE: ${self:provider.stage}
+    NODE_ENV: ${self:provider.stage}
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    API_BASE_URL: ${ssm:/habitly/${self:provider.stage}/api-custom-domain}
+    JWT_SECRET_ARN: ${ssm:/habitly/${self:provider.stage}/jwt-secret-arn}
+    GOOGLE_CLIENT_ID_SECRET_ARN: ${ssm:/habitly/${self:provider.stage}/google-client-id-secret-arn}
+    GOOGLE_CLIENT_SECRET_SECRET_ARN: ${ssm:/habitly/${self:provider.stage}/google-client-secret-secret-arn}
+    DATABASE_URL_SECRET_ARN: ${ssm:/habitly/${self:provider.stage}/database-url-secret-arn}
+
+functions:
+  authLogout:
+    handler: src/handlers/auth/logout.handler
+    name: ${self:provider.stage}-habitly-auth-logout
+    description: User logout endpoint
+    events:
+      - httpApi:
+          path: /auth/logout
+          method: post
+
+  authGoogleOAuth:
+    handler: src/handlers/auth/google-oauth.handler
+    name: ${self:provider.stage}-habitly-auth-google
+    description: Google OAuth authentication endpoint
+    events:
+      - httpApi:
+          path: /auth/google
+          method: post
+
+  authMe:
+    handler: src/handlers/auth/me.handler
+    name: ${self:provider.stage}-habitly-auth-me
+    description: Get current user profile
+    events:
+      - httpApi:
+          path: /auth/me
+          method: get
+
+  authRefreshToken:
+    handler: src/handlers/auth/refresh-token.handler
+    name: ${self:provider.stage}-habitly-auth-refresh
+    description: Refresh access token using refresh token
+    events:
+      - httpApi:
+          path: /auth/refresh
+          method: post
+
+  updateProfile:
+    handler: src/handlers/auth/update-profile.handler
+    name: ${self:provider.stage}-habitly-auth-profile
+    description: Update current user profile
+
+    events:
+      - httpApi:
+          path: /auth/profile
+          method: put
+
+  getBadgeDefinitions:
+    handler: src/handlers/badges/get-badges-definition.handler
+    name: ${self:provider.stage}-habitly-badges-definition
+    description: Get all badges definition
+    events:
+      - httpApi:
+          path: /badges/definitions
+          method: get
+
+  getUserBadges:
+    handler: src/handlers/badges/get-user-badges.handler
+    name: ${self:provider.stage}-habitly-user-badges
+    description: Get user badges with progress
+    events:
+      - httpApi:
+          path: /badges/user
+          method: get
+
+  getCategories:
+    handler: src/handlers/category/get-categories.handler
+    name: ${self:provider.stage}-habitly-categories
+    description: Get all categories
+    events:
+      - httpApi:
+          path: /categories
+          method: get
+            
+  getHabits:
+    handler: src/handlers/habits/get-habits.handler
+    name: ${self:provider.stage}-habitly-get-habits
+    description: Get all user habits with stats
+    events:
+      - httpApi:
+          path: /habits
+          method: get
+
+  getHabit:
+    handler: src/handlers/habits/get-habit.handler
+    name: ${self:provider.stage}-habitly-get-habit
+    description: Get single habit by ID
+    events:
+      - httpApi:
+          path: /habits/{id}
+          method: get
+
+  getHabitHistory:
+    handler: src/handlers/habits/get-habit-history.handler
+    name: ${self:provider.stage}-habitly-habit-history
+    description: Get all habit history
+    events:
+      - httpApi:
+          path: /habits/history
+          method: get
+
+  createHabit:
+    handler: src/handlers/habits/create-habit.handler
+    name: ${self:provider.stage}-habitly-create-habit
+    description: Create new habit
+    events:
+      - httpApi:
+          path: /habits
+          method: post
+
+  updateHabit:
+    handler: src/handlers/habits/update-habit.handler
+    name: ${self:provider.stage}-habitly-update-habit
+    description: Update existing habit
+    events:
+      - httpApi:
+          path: /habits/{id}
+          method: patch
+
+  deleteHabit:
+    handler: src/handlers/habits/delete-habit.handler
+    name: ${self:provider.stage}-habitly-delete-habit
+    description: Delete habit (soft delete)
+    events:
+      - httpApi:
+          path: /habits/{id}
+          method: delete
+
+  restoreHabit:
+    handler: src/handlers/habits/restore-habit.handler
+    name: ${self:provider.stage}-habitly-restore-habit
+    description: Restore deleted habit
+    events:
+      - httpApi:
+          path: /habits/{id}/restore
+          method: post
+
+  toggleCompletion:
+    handler: src/handlers/habits/toggle-completion.handler
+    name: ${self:provider.stage}-habitly-toggle-completion
+    description: Toggle habit completion for specific date
+    events:
+      - httpApi:
+          path: /habits/toggle
+          method: post
+    
+  getUserSettings:
+    handler: src/handlers/users/get-user-settings.handler
+    name: ${self:provider.stage}-habitly-user-settings
+    description: Get user settings
+    events:
+      - httpApi:
+          path: /users/settings
+          method: get
+
+  updateUserSettings:
+    handler: src/handlers/users/update-user-settings.handler
+    name: ${self:provider.stage}-habitly-update-settings
+    description: Update user settings
+    events:
+      - httpApi:
+          path: /users/settings
+          method: patch
+
+  serveDocs:
+    handler: src/handlers/docs/serve-docs.handler
+    name: ${self:provider.stage}-habitly-docs
+    description: Serve API documentation with Swagger UI
+    events:
+      - httpApi:
+          path: /docs
+          method: get
+
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+package:
+  individually: true
+  patterns:
+    - '!**'
+    - 'dist/**'
+    - 'src/handlers/docs/api-specs.yaml'
+    - 'node_modules/.prisma/client/**'
+    - 'node_modules/@prisma/client/runtime/**'
+    - 'node_modules/@prisma/client/default.js'
+    - 'node_modules/@prisma/client/index.js'
+    - 'node_modules/@prisma/client/index.d.ts'
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    target: node18
+    platform: node
+    packager: npm
+    keepNames: true
+    external:
+      - '@prisma/client'
+      
+  serverless-offline:
+    host: 0.0.0.0
+    port: 3000
+    stage: dev
+    httpApi:
+      port: 3001

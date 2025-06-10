@@ -1,0 +1,45 @@
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# Crash log files
+crash.log
+
+# Exclude all .tfvars files (contain secrets)
+*.tfvars.*
+*.tfvars
+*.tfvars.json
+
+
+# Environment files with secrets
+.env.*
+.env.dev
+.env.prod
+
+# Infrastructure outputs (may contain sensitive data)
+infrastructure-outputs.json
+**/infrastructure-outputs.json
+
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
+
+# MacOS files
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Backup files
+*.backup
+*.bak
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+temp/

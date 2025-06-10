@@ -1,0 +1,37 @@
+{
+    "name": "habitly",
+    "version": "1.0.0",
+    "description": "Complete habit tracking application",
+    "private": true,
+    "workspaces": [
+      "apps/*"
+    ],
+    "scripts": {
+      "dev": "npm run dev --workspace=apps/frontend",
+      "dev:backend": "npm run dev --workspace=apps/backend",
+      "build": "npm run build --workspace=apps/frontend",
+      "build:backend": "npm run build --workspace=apps/backend",
+      "test": "npm run test --workspaces",
+      "lint": "npm run lint --workspaces",
+      "deploy:infra:dev": "cd infrastructure/environments/dev && terraform apply",
+      "deploy:infra:prod": "cd infrastructure/environments/prod && terraform apply",
+      "deploy:backend:dev": "cd apps/backend && serverless deploy --stage dev",
+      "deploy:backend:prod": "cd apps/backend && serverless deploy --stage prod",
+      "deploy:all:dev": "npm run deploy:infra:dev && npm run deploy:backend:dev",
+      "deploy:all:prod": "npm run deploy:infra:prod && npm run deploy:backend:prod"
+    },
+    "keywords": [
+      "habit-tracker",
+      "react",
+      "nodejs",
+      "aws",
+      "terraform",
+      "serverless"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {
+      "npm-run-all": "^4.1.5"
+    }
+  }
+  

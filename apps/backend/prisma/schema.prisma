@@ -1,0 +1,220 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int                     @id @default(autoincrement())
+  email        String                  @unique
+  name         String?
+  photoUrl     String?                 @map("photo_url")
+  isPremium    Boolean                 @default(false) @map("is_premium")
+  joinedAt     DateTime                @default(now()) @map("joined_at")
+  googleId     String?                 @unique @map("google_id")
+  provider     String                  @default("google")
+  lastLoginAt  DateTime?               @map("last_login_at")
+  timezone     String?                 @default("UTC") @map("timezone")
+  completions  HabitCompletionRecord[]
+  habits       Habit[]
+  RefreshToken RefreshToken[]
+  userBadges   UserBadge[]
+  settings     UserSettings?
+
+  @@map("users")
+}
+
+model UserSettings {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @unique @map("user_id")
+  emailNotifications Boolean  @default(true) @map("email_notifications")
+  publicProfile      Boolean  @default(false) @map("public_profile")
+  quietHoursEnabled  Boolean  @default(false) @map("quiet_hours_enabled")
+  quietHoursStart    String   @default("22:00") @map("quiet_hours_start")
+  quietHoursEnd      String   @default("08:00") @map("quiet_hours_end")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  tokenHash String
+  userId    Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_token")
+}
+
+model Habit {
+  id               Int                     @id @default(autoincrement())
+  userId           Int
+  name             String
+  description      String?
+  category         Category
+  subcategory      SubCategory
+  startAt          DateTime                @default(now()) @map("start_at")
+  endAt            DateTime?               @map("end_at")
+  notificationTime String?                 @map("notification_time")
+  pauseUntil       DateTime?               @map("pause_until")
+  createdAt        DateTime                @default(now()) @map("created_at")
+  deletedAt        DateTime?               @map("deleted_at")
+  frequency        Json?
+  completions      HabitCompletionRecord[]
+  user             User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, deletedAt])
+  @@index([userId, startAt, endAt])
+  @@map("habits")
+}
+
+model HabitCompletionRecord {
+  id          Int              @id @default(autoincrement())
+  habitId     Int
+  userId      Int
+  status      CompletionStatus @default(completed)
+  mood        Int?
+  notes       String?
+  completedAt DateTime         @map("completed_at")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @default(now()) @map("updated_at")
+  habit       Habit            @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, completedAt])
+  @@index([userId, completedAt])
+  @@map("habit_completion_records")
+}
+
+model Badge {
+  id          String      @id
+  name        String
+  description String?
+  icon        String
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @map("updated_at")
+  criteria    String?
+  isPremium   Boolean     @default(false) @map("is_premium")
+  rarity      String      @default("common")
+  category    String      @default("general")
+  userBadges  UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  badgeId       String
+  earnedAt      DateTime? @default(now()) @map("earned_at")
+  firstEarnedAt DateTime? @map("first_earned_at")
+  revoked       Boolean?  @default(false)
+  badge         Badge     @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+enum Category {
+  personal
+  health
+  fitness
+  mindfulness
+  productivity
+  learning
+  finance
+  social
+  environmental
+  hobbies
+  other
+}
+
+enum SubCategory {
+  running
+  strength
+  cycling
+  workout
+  climbing
+  swimming
+  sports
+  hydration
+  nutrition
+  sleep
+  medication
+  checkup
+  dental
+  mental
+  yoga
+  meditation
+  gratitude
+  journaling
+  prayer
+  reading
+  writing
+  studying
+  skills
+  coding
+  language
+  research
+  planning
+  time_mgmt
+  work
+  goals
+  progress
+  tasks
+  track
+  creative
+  music
+  nature
+  self_care
+  family
+  pets
+  home
+  saving
+  budget
+  investing
+  expense
+  bills
+  friends
+  reach_out
+  events
+  network
+  dating
+  give
+  recycle
+  eco_friendly
+  walk
+  save_water
+  energy
+  photography
+  gaming
+  crafting
+  art
+  knitting
+  movies
+  cooking
+  gardening
+  custom
+  routine
+  reminder
+  general
+  habit
+  fun
+  challenge
+  avoid
+  track_other
+}
+
+enum CompletionStatus {
+  completed
+  incomplete
+}

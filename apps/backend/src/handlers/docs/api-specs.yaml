@@ -1,0 +1,927 @@
+openapi: 3.0.3
+info:
+  title: Habitly Backend API
+  description: API for the Habitly habit tracking application
+  version: 1.0.0
+  contact:
+    name: Habitly Team
+
+servers:
+  - url: "{{SERVER_URL}}"
+    description: Server URL
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        timezone:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserProfile'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    GoogleOAuthRequest:
+      type: object
+      required:
+        - idToken
+        - timezone
+      properties:
+        idToken:
+          type: string
+          description: Google ID token
+        timezone:
+          type: string
+          description: User's timezone
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        timezone:
+          type: string
+
+    Habit:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        subcategory:
+          type: string
+        frequency:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [daily, weekly]
+            targetDays:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 6
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        notificationTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+        pauseUntil:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    HabitWithStats:
+      allOf:
+        - $ref: '#/components/schemas/Habit'
+        - type: object
+          properties:
+            stats:
+              type: object
+              properties:
+                currentStreak:
+                  type: integer
+                longestStreak:
+                  type: integer
+                totalCompletions:
+                  type: integer
+                completionRate:
+                  type: number
+                  format: float
+
+    CreateHabitRequest:
+      type: object
+      required:
+        - name
+        - category
+        - subcategory
+        - frequency
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        category:
+          type: string
+        subcategory:
+          type: string
+        frequency:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [daily, weekly]
+            targetDays:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 6
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        notificationTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+        pauseUntil:
+          type: string
+          format: date-time
+
+    UpdateHabitRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        category:
+          type: string
+        subcategory:
+          type: string
+        frequency:
+          type: object
+          properties:
+            type:
+              type: string
+              enum: [daily, weekly]
+            targetDays:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 6
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
+        notificationTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+        pauseUntil:
+          type: string
+          format: date-time
+
+    ToggleHabitRequest:
+      type: object
+      required:
+        - habitId
+        - date
+      properties:
+        habitId:
+          type: integer
+        date:
+          type: string
+          format: date
+        mood:
+          type: integer
+          minimum: 1
+          maximum: 5
+        notes:
+          type: string
+          maxLength: 500
+
+    DailyHabitSummary:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        habits:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              completed:
+                type: boolean
+              mood:
+                type: integer
+              notes:
+                type: string
+
+    BadgeDefinition:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        iconUrl:
+          type: string
+        criteria:
+          type: object
+        category:
+          type: string
+        isActive:
+          type: boolean
+
+    BadgeWithProgress:
+      allOf:
+        - $ref: '#/components/schemas/BadgeDefinition'
+        - type: object
+          properties:
+            earned:
+              type: boolean
+            earnedAt:
+              type: string
+              format: date-time
+            progress:
+              type: object
+              properties:
+                current:
+                  type: integer
+                required:
+                  type: integer
+                percentage:
+                  type: number
+                  format: float
+
+    BadgeResponse:
+      type: object
+      properties:
+        badges:
+          type: array
+          items:
+            $ref: '#/components/schemas/BadgeWithProgress'
+        stats:
+          type: object
+          properties:
+            total:
+              type: integer
+            earned:
+              type: integer
+            locked:
+              type: integer
+            completionRate:
+              type: number
+              format: float
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        subcategories:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+              description:
+                type: string
+
+    UserSettings:
+      type: object
+      properties:
+        emailNotifications:
+          type: boolean
+        publicProfile:
+          type: boolean
+        quietHoursEnabled:
+          type: boolean
+        quietHoursStart:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+        quietHoursEnd:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+
+    UpdateSettingsRequest:
+      type: object
+      properties:
+        emailNotifications:
+          type: boolean
+        publicProfile:
+          type: boolean
+        quietHoursEnabled:
+          type: boolean
+        quietHoursStart:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+        quietHoursEnd:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+
+    SuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+paths:
+  # Authentication Endpoints
+  /auth/google:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate with Google OAuth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleOAuthRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/profile:
+    put:
+      tags:
+        - Authentication
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Habits Endpoints
+  /habits:
+    get:
+      tags:
+        - Habits
+      summary: Get all user habits
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Habits retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/HabitWithStats'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Habits
+      summary: Create a new habit
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHabitRequest'
+      responses:
+        '201':
+          description: Habit created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /habits/{id}:
+    get:
+      tags:
+        - Habits
+      summary: Get habit by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Habit retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitWithStats'
+        '404':
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - Habits
+      summary: Update habit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHabitRequest'
+      responses:
+        '200':
+          description: Habit updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Habits
+      summary: Delete habit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Habit deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /habits/{id}/restore:
+    post:
+      tags:
+        - Habits
+      summary: Restore deleted habit
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Habit restored successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+        '404':
+          description: Habit not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /habits/toggle:
+    post:
+      tags:
+        - Habits
+      summary: Toggle habit completion
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleHabitRequest'
+      responses:
+        '200':
+          description: Habit completion toggled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  completed:
+                    type: boolean
+                  newBadges:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BadgeDefinition'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /habits/history:
+    get:
+      tags:
+        - Habits
+      summary: Get habit completion history
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Start date (YYYY-MM-DD)
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: End date (YYYY-MM-DD)
+      responses:
+        '200':
+          description: Habit history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DailyHabitSummary'
+        '400':
+          description: Invalid date range
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Badges Endpoints
+  /badges/definitions:
+    get:
+      tags:
+        - Badges
+      summary: Get all badge definitions
+      responses:
+        '200':
+          description: Badge definitions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BadgeDefinition'
+
+  /badges/user:
+    get:
+      tags:
+        - Badges
+      summary: Get user badges and progress
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User badges retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadgeResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Categories Endpoints
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Get all categories
+      responses:
+        '200':
+          description: Categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  # User Settings Endpoints
+  /users/settings:
+    get:
+      tags:
+        - User Settings
+      summary: Get user settings
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      tags:
+        - User Settings
+      summary: Update user settings
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettingsRequest'
+      responses:
+        '200':
+          description: User settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettings'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Authentication
+    description: Authentication and user management endpoints
+  - name: Habits
+    description: Habit management and tracking endpoints
+  - name: Badges
+    description: Badge and achievement system endpoints
+  - name: Categories
+    description: Habit category management endpoints
+  - name: User Settings
+    description: User preference and settings endpoints

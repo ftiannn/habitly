@@ -1,0 +1,80 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Keep the example file
+!.env.example
+
+# Capacitor iOS
+ios/App/build/
+ios/App/Pods/
+ios/App/Podfile.lock
+ios/App/*.xcuserstate
+ios/App/*.xcworkspace/xcuserdata/
+ios/App/xcuserdata/
+ios/App/*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+ios/App/DerivedData/
+ios/DerivedData/
+
+# Capacitor Android
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/google-services.json
+android/app/src/debug/
+android/app/src/release/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+
+# Don't ignore these Android files (you want to keep them)
+!android/app/src/main/
+!android/build.gradle
+!android/settings.gradle
+!android/capacitor.settings.gradle
+!android/variables.gradle
+!android/gradle.properties
+
+# Mobile-specific files that should be ignored
+GoogleService-Info.plist
+google-services.json
+
+# Generated Capacitor files
+capacitor-cordova-android-plugins/
+capacitor-cordova-ios-plugins/
+
+# Build outputs
+dist/
+build/
+
+# Others
+backup/
