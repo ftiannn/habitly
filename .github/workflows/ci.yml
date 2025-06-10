@@ -38,28 +38,9 @@ jobs:
         run: |
           echo "Testing Backend with Production Environment..."
 
-          echo "=== Debug workspace ==="
-          pwd
-          ls -la package.json
-          cat package.json | head -5
-          npm config get prefix
-          which npm
-
-          echo "=== Environment Check ==="
-          node --version
-          npm --version
-          pwd
-          ls -la
-
-          echo "=== Clean install dependencies ==="
+          echo "Clean install dependencies..."
           npm ci
-
-          echo "=== Verify TypeScript and Jest installation ==="
-          npx tsc --version
-          npx jest --version
-
-          echo "=== Check critical type packages ==="
-          npm ls @types/node @types/aws-lambda @types/jsonwebtoken @types/jest --depth=0
+          npm install --no-save @types/node @types/aws-lambda @types/jsonwebtoken
 
           echo "Prisma schema validation..."
           npm run prisma:validate
