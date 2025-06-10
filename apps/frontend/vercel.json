@@ -1,0 +1,9 @@
+{
+  "buildCommand": "rm -rf node_modules package-lock.json && npm ci && npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci --legacy-peer-deps",
+  "framework": "vite",
+  "env": {
+    "NPM_CONFIG_OPTIONAL": "false"
+  }
+}
