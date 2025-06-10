@@ -37,10 +37,11 @@ jobs:
 
         run: |
           echo "Testing Backend with Production Environment..."
-          npm ci
-
-          echo "Checking installed @types..."
-          ls -la node_modules/@types || echo "@types not found"
+          
+          echo "Clean install dependencies..."
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install
 
           echo "Prisma schema validation..."
           npm run prisma:validate

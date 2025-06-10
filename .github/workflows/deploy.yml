@@ -63,8 +63,10 @@ jobs:
           echo "Starting production backend deployment..."
           cd apps/backend
 
-          echo "Installing dependencies..."
-          npm ci
+          echo "Clean install dependencies..."
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+          npm install
 
           echo "Generating Prisma client..."
           npm run prisma:generate
