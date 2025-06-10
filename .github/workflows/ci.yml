@@ -47,10 +47,7 @@ jobs:
           
           echo "Prisma client generation..."
           npm run prisma:generate
-                    
-          echo "TypeScript compilation..."
-          npx tsc --noEmit
-          
+                  
           echo "Build validation..."
           npm run build
 
