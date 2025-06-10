@@ -27,8 +27,8 @@ variable "cors_allowed_origins" {
       "https://dev.myhabitly.com"
     ]
     prod = [
-      "https://myhabitly.com",
-      "https://www.myhabitly.com"
+      "https://app.myhabitly.com",
+      "https://www.app.myhabitly.com"
     ]
   }
 }
