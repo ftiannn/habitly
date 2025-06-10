@@ -8,7 +8,7 @@ terraform {
   backend "s3" {
     bucket         = "habitly-terraform-state-prod"
     key            = "prod/terraform.tfstate"
-    region         = "ap-southeast-1"  
+    region         = "ap-southeast-1"
     dynamodb_table = "habitly-terraform-locks-prod"
     encrypt        = true
   }
@@ -28,18 +28,18 @@ provider "aws" {
 # Secrets Manager - Production secrets
 module "secrets" {
   source = "../../modules/secrets"
-  
+
   environment          = "prod"
-  jwt_secret          = var.jwt_secret           # From TF_VAR_jwt_secret
-  google_client_id    = var.google_client_id    # From TF_VAR_google_client_id
+  jwt_secret           = var.jwt_secret           # From TF_VAR_jwt_secret
+  google_client_id     = var.google_client_id     # From TF_VAR_google_client_id
   google_client_secret = var.google_client_secret # From TF_VAR_google_client_secret
-  database_url        = var.database_url        # From TF_VAR_database_url
+  database_url         = var.database_url         # From TF_VAR_database_url
 }
 
 # Lambda IAM Role
 module "lambda_role" {
   source = "../../modules/lambda-role"
-  
+
   environment = "prod"
   secret_arns = [
     module.secrets.jwt_secret_arn,
@@ -52,26 +52,26 @@ module "lambda_role" {
 # API Gateway - Production configuration
 module "api" {
   source = "../../modules/api"
-  
+
   environment                  = "prod"
-  enable_free_tier_constraints = false 
+  enable_free_tier_constraints = false
 }
 
 # Certificate module - Production domain
 module "certificate" {
   source = "../../modules/certificate"
-  
-  domain_name = var.domain_name 
+
+  domain_name = var.domain_name
   environment = var.environment
 }
 
 # Custom Domain - Production
 module "custom_domain" {
   source = "../../modules/custom-domain"
-  
-  domain_name      = var.domain_name
-  environment      = var.environment
-  certificate_arn  = module.certificate.certificate_arn
-  api_id           = module.api.api_id
-  stage_name       = module.api.stage_name
+
+  domain_name     = var.domain_name
+  environment     = var.environment
+  certificate_arn = module.certificate.certificate_arn
+  api_id          = module.api.api_id
+  stage_name      = module.api.stage_name
 }
