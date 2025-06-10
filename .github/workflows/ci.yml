@@ -76,7 +76,8 @@ jobs:
           NODE_ENV: "production"
         run: |
           echo "Testing Frontend with Production Config..."
-          npm ci
+          rm -rf node_modules package-lock.json
+          npm install --include=dev
 
           echo "TypeScript compilation..."
           npx tsc --noEmit
