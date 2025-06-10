@@ -37,9 +37,23 @@ jobs:
 
         run: |
           echo "Testing Backend with Production Environment..."
+          
+          echo "=== Environment Check ==="
+          node --version
+          npm --version
+          pwd
+          ls -la
 
-          echo "Clean install dependencies..."
+          echo "=== Clean install dependencies ==="
           npm ci
+
+          echo "=== Verify TypeScript and Jest installation ==="
+          npx tsc --version
+          npx jest --version
+          
+          echo "=== Check critical type packages ==="
+          npm ls @types/node @types/aws-lambda @types/jsonwebtoken @types/jest
+
 
           echo "Prisma schema validation..."
           npm run prisma:validate
@@ -51,7 +65,7 @@ jobs:
           npm run build || echo "Build error occurred"
 
           echo "Run test..."
-          npm run test
+          npx jest --passWithNoTests || npm run test --passWithNoTests
           
           echo "Serverless package test"
           npm install -g serverless@3

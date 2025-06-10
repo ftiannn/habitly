@@ -2,7 +2,8 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022"],  // Remove DOM since this is Node.js
+    "types": ["node"],  // Add this back - you need it for Lambda
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
