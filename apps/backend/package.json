@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.826.0",
+    "@aws-sdk/client-secrets-manager": "^3.817.0",
     "@prisma/client": "^5.7.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
@@ -38,7 +39,6 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.817.0",
     "@faker-js/faker": "^9.8.0",
     "@types/aws-lambda": "^8.10.149",
     "@types/bcryptjs": "^2.4.6",
@@ -65,6 +65,5 @@
     "typescript": "^5.8.3"
   },
   "engines": {
-    "node": ">=20.0.0"
-  }
+    "node": ">=22.0.0" 
 }
