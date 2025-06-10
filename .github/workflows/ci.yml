@@ -39,8 +39,9 @@ jobs:
           echo "Testing Backend with Production Environment..."
           npm ci
 
-          echo "{{ secrets.PROD_DATABASE_URL }}"
-          
+          echo "Checking installed @types..."
+          ls -la node_modules/@types || echo "@types not found"
+
           echo "Prisma schema validation..."
           npm run prisma:validate
           
