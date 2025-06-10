@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Setup terraform
         uses: hashicorp/setup-terraform@v3
@@ -38,10 +38,18 @@ jobs:
         run: |
           echo "Testing Backend with Production Environment..."
 
+          echo "=== Environment Check ==="
+          node --version
+          pwd
+          ls -la
+
           echo "Clean install dependencies..."
-          rm -rf node_modules package-lock.json
-          npm cache clean --force
-          npm install
+          npm ci
+
+          echo "Verify installations..."
+          node --version
+          npm --version
+          npx jest --version
 
           echo "Prisma schema validation..."
           npm run prisma:validate
