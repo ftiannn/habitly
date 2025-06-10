@@ -1,0 +1,102 @@
+name: Prepare App Store Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'App version (e.g., 1.0.0)'
+        required: true
+        type: string
+
+      platform:
+        description: 'Platform to build'
+        required: true
+        type: choice
+        options:
+          - both
+          - ios
+          - android
+          
+      confirm:
+        description: 'Type "BUILD" to confirm'
+        required: true
+        type: string
+
+jobs:
+  prepare-release:
+    name: Build v${{ inputs.version }} for ${{ inputs.platform }}
+    runs-on: macos-latest
+    if: inputs.confirm == 'BUILD'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup Xcode
+      if: inputs.platform == 'ios' || inputs.platform == 'both'
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Setup Java
+      if: inputs.platform == 'android' || inputs.platform == 'both'
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Build App
+      working-directory: apps/frontend
+      run: |
+        echo "Building Habitly v${{ inputs.version }} for ${{ inputs.platform }}"
+        
+        npm ci
+        npm run build -- --mode production
+        npm install -g @capacitor/cli
+        npx cap sync
+
+    - name: Build iOS
+      if: inputs.platform == 'ios' || inputs.platform == 'both'
+      working-directory: apps/frontend
+      run: |
+        echo "Building iOS app..."
+        npx cap build ios --prod
+        echo "iOS build completed"
+
+    - name: Build Android
+      if: inputs.platform == 'android' || inputs.platform == 'both'
+      working-directory: apps/frontend
+      run: |
+        echo "Building Android app..."
+        npx cap build android --prod
+        echo "Android build completed"
+
+    - name: Release Instructions
+      run: |
+        echo "App Store Release v${{ inputs.version }} prepared!"
+        echo ""
+        echo "Next Steps:"
+        
+        if [[ "${{ inputs.platform }}" == "ios" || "${{ inputs.platform }}" == "both" ]]; then
+          echo ""
+          echo "iOS App Store:"
+          echo "  1. npx cap open ios"
+          echo "  2. Update version to ${{ inputs.version }} in Xcode"
+          echo "  3. Archive and upload to App Store Connect"
+        fi
+        
+        if [[ "${{ inputs.platform }}" == "android" || "${{ inputs.platform }}" == "both" ]]; then
+          echo ""
+          echo "Google Play Store:"
+          echo "  1. npx cap open android" 
+          echo "  2. Update version to ${{ inputs.version }} in build.gradle"
+          echo "  3. Build signed AAB and upload to Play Console"
+        fi
+        
+        echo ""
+        echo "Build completed successfully!"

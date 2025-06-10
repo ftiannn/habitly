@@ -18,11 +18,6 @@ export const AUTH_CONFIG = {
   GOOGLE_ANDROID_CLIENT_ID: import.meta.env.VITE_GOOGLE_ANDROID_CLIENT_ID || '',
 };
 
-export const FEATURES = {
-  CELEBRATIONS: import.meta.env.VITE_ENABLE_CELEBRATIONS === 'true' || true,
-  LOCAL_STORAGE_FALLBACK: import.meta.env.VITE_LOCAL_STORAGE_FALLBACK === 'true' || true
-};
-
 export const IS_DEVELOPMENT = import.meta.env.DEV;
 export const IS_PRODUCTION = import.meta.env.PROD;
 export const IS_TEST = import.meta.env.MODE === 'test';
@@ -30,7 +25,6 @@ export const IS_TEST = import.meta.env.MODE === 'test';
 export default {
   API: API_CONFIG,
   AUTH: AUTH_CONFIG,
-  FEATURES,
   IS_DEVELOPMENT,
   IS_PRODUCTION,
   IS_TEST

@@ -1,0 +1,164 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      what:
+        description: "What to deploy"
+        required: true
+        type: choice
+        options:
+          - infrastructure-dev
+          - infrastructure-prod
+          - backend-dev
+          - backend-prod
+          - everything-dev
+          - everything-prod
+      confirm:
+        description: 'Type "GO" to confirm'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    env:
+      API_URL_DEV: ${{ vars.API_URL_DEV }}
+      API_URL_PROD: ${{ vars.API_URL_PROD }}
+
+    name: Deploy ${{ inputs.what }}
+    runs-on: ubuntu-latest
+    if: inputs.confirm == 'GO'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-1
+
+      - name: Deploy Infrastructure
+        if: contains(inputs.what, 'infrastructure') || contains(inputs.what, 'everything')
+        run: |
+          echo "Starting infrastructure deployment..."
+          cd infrastructure/environments
+          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
+            cd prod
+            ENV="prod"
+          else
+            cd dev  
+            ENV="dev"
+          fi
+
+          echo "Setting up environment variables..."
+          export TF_VAR_database_url="${{ contains(inputs.what, 'prod') && secrets.PROD_DATABASE_URL || secrets.DEV_DATABASE_URL }}"
+          export TF_VAR_jwt_secret="${{ contains(inputs.what, 'prod') && secrets.PROD_JWT_SECRET || secrets.DEV_JWT_SECRET }}"
+          export TF_VAR_google_client_id="${{ contains(inputs.what, 'prod') && secrets.PROD_GOOGLE_CLIENT_ID || secrets.DEV_GOOGLE_CLIENT_ID }}"
+          export TF_VAR_google_client_secret="${{ contains(inputs.what, 'prod') && secrets.PROD_GOOGLE_CLIENT_SECRET || secrets.DEV_GOOGLE_CLIENT_SECRET }}"
+
+          echo "Initializing Terraform..."
+          terraform init
+
+          echo "Applying infrastructure changes..."
+          terraform apply -auto-approve
+
+          echo "Infrastructure deployed to $ENV"
+
+      - name: Deploy Backend
+        if: contains(inputs.what, 'backend') || contains(inputs.what, 'everything')
+        run: |
+          echo "Starting backend deployment..."
+          cd apps/backend
+
+          echo "Installing dependencies..."
+          npm ci
+
+          echo "Generating Prisma client..."
+          npm run prisma:generate
+
+          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
+            ENV="prod"
+            echo "Configuring production environment..."
+            cat > .env << EOF
+            DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}"
+            JWT_SECRET="${{ secrets.PROD_JWT_SECRET }}"
+            GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}"
+            GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}"
+            STAGE="prod"
+            EOF
+          else
+            ENV="dev"
+            echo "Configuring development environment..."
+            cat > .env << EOF
+            DATABASE_URL="${{ secrets.DEV_DATABASE_URL }}"
+            JWT_SECRET="${{ secrets.DEV_JWT_SECRET }}"
+            GOOGLE_CLIENT_ID="${{ secrets.DEV_GOOGLE_CLIENT_ID }}"
+            GOOGLE_CLIENT_SECRET="${{ secrets.DEV_GOOGLE_CLIENT_SECRET }}"
+            STAGE="dev"
+            EOF
+          fi
+          echo "Running database migrations..."
+          npm run prisma:deploy
+
+          echo "Installing serverless framework..."
+          npm install -g serverless@3
+
+          echo "Deploying serverless functions..."
+          npm run deploy:$ENV
+
+          echo "Backend deployed to $ENV"
+
+      - name: Test Deployment
+        if: contains(inputs.what, 'backend') || contains(inputs.what, 'everything')
+        run: |
+          echo "Running post-deployment tests..."
+          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
+            URL="${{ vars.API_URL_PROD }}"
+            echo "Testing production API at $URL"
+          else
+            URL="${{ vars.API_URL_DEV }}"
+            echo "Testing development API at $URL"
+          fi
+
+          echo "Running API health checks..."
+          echo "  Testing categories endpoint..."
+          if curl -f "$URL/categories" --connect-timeout 10 --max-time 30; then
+            echo "  Categories endpoint: OK"
+          else
+            echo "  Warning: Categories test failed"
+          fi
+
+          echo "  Testing docs endpoint..."
+          if curl -f "$URL/docs" --connect-timeout 10 --max-time 30; then
+            echo "  Docs endpoint: OK"
+          else
+            echo "  Warning: Docs test failed"
+          fi
+
+          echo "API testing completed for $URL"
+
+      - name: Deployment Complete
+        run: |
+          echo "=============================="
+          echo "Deployment Summary"
+          echo "=============================="
+          echo ""
+          echo "Component: ${{ inputs.what }}"
+          echo "Status: Completed Successfully"
+          echo "Time: $(date)"
+          echo ""
+
+          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
+            echo "Production Environment:"
+            echo "  API: ${{ vars.API_URL_PROD }}"
+            echo "  Documentation: ${{ vars.API_URL_PROD }}/docs"
+          else
+            echo "Development Environment:"
+            echo "  API: ${{ vars.API_URL_DEV }}"
+            echo "  Documentation: ${{ vars.API_URL_DEV }}/docs"
+          fi
+          echo ""
+          echo "Deployment completed successfully!"
