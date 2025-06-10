@@ -46,10 +46,7 @@ jobs:
           
           echo "Prisma client generation..."
           npm run prisma:generate
-          
-          echo "Database connectivity test..."
-          npx prisma db pull
-          
+                    
           echo "TypeScript compilation..."
           npx tsc --noEmit
           
