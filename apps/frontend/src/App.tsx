@@ -20,6 +20,7 @@ import { LOTTIE_ANIMATIONS } from "./constants/lottie-animations";
 import { useAuth } from '@/lib/hooks/use-auth'
 import PrivacyPolicy from "./pages/PrivacyPage";
 import TermsAndConditions from "./pages/TermsAndCondition";
+import GoogleCallbackHandler from "./components/GoogleCallbackHandler";
 
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -78,6 +79,7 @@ const App = () => {
               <AuthProvider>
                 <Routes>
                   <Route path="/login" element={<Login />} />
+                  <Route path="/capacitor/social-login" element={<GoogleCallbackHandler />} />
 
                   <Route path="/privacy" element={<PrivacyPolicy />} />
                   <Route path="/tnc" element={<TermsAndConditions />} />
