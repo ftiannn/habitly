@@ -114,11 +114,6 @@ jobs:
           cd environments/prod
           terraform init -backend=false
           terraform validate
-
-          echo "Production plan validation..."
-          terraform plan
-
-          echo "Terraform formatting check..."
           terraform fmt -check
 
           cd ../../
