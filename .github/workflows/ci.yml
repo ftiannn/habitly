@@ -12,40 +12,136 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
 
-    - name: Test Backend
-      working-directory: apps/backend
-      run: |
-        npm ci
-        npx prisma validate
-        npx prisma generate
-        npm test || echo "Tests not configured"
-        echo "Backend: PASS"
+      - name: Setup terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Test Frontend
-      working-directory: apps/frontend
-      run: |
-        npm ci
-        npm run build
-        npx cap sync
-        echo "Frontend: PASS"
+      - name: Test Backend
+        working-directory: apps/backend
+        env:
+          DATABASE_URL: ${{ secrets.PROD_DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.PROD_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
+          STAGE: "prod"
+          NODE_ENV: "production"
+          AWS_REGION: "ap-southeast-1"
 
-    - name: Test Infrastructure
-      working-directory: infrastructure
-      run: |
-        cd environments/dev && terraform init -backend=false && terraform validate
-        cd ../prod && terraform init -backend=false && terraform validate
-        echo "Infrastructure: PASS"
+        run: |
+          echo "Testing Backend with Production Environment..."
+          npm ci
+          
+          echo "Prisma schema validation..."
+          npm run prisma:validate
+          
+          echo "Prisma client generation..."
+          npm run prisma generate
+          
+          echo "Database connectivity test..."
+          npx prisma db pull --preview-feature
+          
+          echo "TypeScript compilation..."
+          npx tsc --noEmit
+          
+          echo "Build validation..."
+          npm run build
 
-    - name: All Tests Passed
-      run: |
-        echo "================="
-        echo "All components tested successfully"
-        echo "Ready for deployment"
+          echo "Run test..."
+          npm run test
+          
+          echo "Serverless package test"
+          npm install -g serverless@3
+          npm run package:prod
+          
+          echo "Backend: PASS"
+
+      - name: Test Frontend
+        working-directory: apps/frontend
+        env:
+          VITE_API_BASE_URL: ${{ vars.API_URL_PROD }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.PROD_GOOGLE_CLIENT_ID }}
+          NODE_ENV: "production"
+        run: |
+          echo "Testing Frontend with Production Config..."
+          npm ci
+          
+          echo "TypeScript compilation..."
+          npx tsc --noEmit
+          
+          echo "Production build test..."
+          npm run build
+          
+          echo "Build verification..."
+          if [ ! -d "dist" ]; then
+            echo "ERROR: Build failed - no dist directory created"
+            exit 1
+          fi
+          
+          echo "Build successful - $(du -sh dist/ | cut -f1)"
+          echo "Files created: $(find dist -type f | wc -l)"
+          
+          echo "Capacitor sync validation..."
+          npx cap sync
+          
+          echo "Frontend tests: PASS"
+
+
+      # Test Infrastructure
+      - name: Test Infrastructure
+        working-directory: infrastructure
+        env:
+          TF_VAR_database_url: ${{ secrets.PROD_DATABASE_URL }}
+          TF_VAR_jwt_secret: ${{ secrets.PROD_JWT_SECRET }}
+          TF_VAR_google_client_id: ${{ secrets.PROD_GOOGLE_CLIENT_ID }}
+          TF_VAR_google_client_secret: ${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}
+
+        run: |
+          echo "Testing Infrastructure with Production Variables..."
+          echo "Production environment validation..."
+          cd environments/prod
+          terraform init -backend=false
+          terraform validate
+          
+          echo "Production plan validation..."
+          terraform plan
+
+          echo "Terraform formatting check..."
+          terraform fmt -check
+
+          cd ../../
+          echo "Infrastructure: PASS"
+
+      - name: Security Checks
+        run: |
+          echo "Running security checks..."
+          
+          echo "Backend security audit..."
+          cd apps/backend
+          npm audit --audit-level=high
+          cd ../../
+          
+          echo "Frontend security audit..."
+          cd apps/frontend  
+          npm audit --audit-level=high
+          cd ../../
+          
+          echo "Security checks: PASS"
+          
+      - name: All Tests Passed
+        run: |
+          echo "================="
+          echo "ALL TESTS PASSED"
+          echo "=========================================="
+          echo "Backend: DB connection, Prisma, Build, Package"
+          echo "Frontend: Production build, Assets" 
+          echo "Infrastructure: Production plan validation"
+          echo "Security: High-level vulnerabilities checked"
+          echo "=========================================="
+          echo "Ready for production deployment"
