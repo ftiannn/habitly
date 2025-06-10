@@ -8,11 +8,8 @@ on:
         required: true
         type: choice
         options:
-          - infrastructure-dev
           - infrastructure-prod
-          - backend-dev
           - backend-prod
-          - everything-dev
           - everything-prod
       confirm:
         description: 'Type "GO" to confirm'
@@ -21,13 +18,13 @@ on:
 
 jobs:
   deploy:
-    env:
-      API_URL_DEV: ${{ vars.API_URL_DEV }}
-      API_URL_PROD: ${{ vars.API_URL_PROD }}
-
     name: Deploy ${{ inputs.what }}
     runs-on: ubuntu-latest
+    environment: production  # ADD THIS - to access environment secrets
     if: inputs.confirm == 'GO'
+
+    env:
+      API_URL_PROD: ${{ vars.API_URL_PROD }}
 
     steps:
       - name: Checkout
@@ -43,21 +40,14 @@ jobs:
       - name: Deploy Infrastructure
         if: contains(inputs.what, 'infrastructure') || contains(inputs.what, 'everything')
         run: |
-          echo "Starting infrastructure deployment..."
-          cd infrastructure/environments
-          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
-            cd prod
-            ENV="prod"
-          else
-            cd dev  
-            ENV="dev"
-          fi
+          echo "Starting production infrastructure deployment..."
+          cd infrastructure/environments/prod
 
           echo "Setting up environment variables..."
-          export TF_VAR_database_url="${{ contains(inputs.what, 'prod') && secrets.PROD_DATABASE_URL || secrets.DEV_DATABASE_URL }}"
-          export TF_VAR_jwt_secret="${{ contains(inputs.what, 'prod') && secrets.PROD_JWT_SECRET || secrets.DEV_JWT_SECRET }}"
-          export TF_VAR_google_client_id="${{ contains(inputs.what, 'prod') && secrets.PROD_GOOGLE_CLIENT_ID || secrets.DEV_GOOGLE_CLIENT_ID }}"
-          export TF_VAR_google_client_secret="${{ contains(inputs.what, 'prod') && secrets.PROD_GOOGLE_CLIENT_SECRET || secrets.DEV_GOOGLE_CLIENT_SECRET }}"
+          export TF_VAR_database_url="${{ secrets.PROD_DATABASE_URL }}"
+          export TF_VAR_jwt_secret="${{ secrets.PROD_JWT_SECRET }}"
+          export TF_VAR_google_client_id="${{ secrets.PROD_GOOGLE_CLIENT_ID }}"
+          export TF_VAR_google_client_secret="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}"
 
           echo "Initializing Terraform..."
           terraform init
@@ -65,12 +55,12 @@ jobs:
           echo "Applying infrastructure changes..."
           terraform apply -auto-approve
 
-          echo "Infrastructure deployed to $ENV"
+          echo "Infrastructure deployed to production"
 
       - name: Deploy Backend
         if: contains(inputs.what, 'backend') || contains(inputs.what, 'everything')
         run: |
-          echo "Starting backend deployment..."
+          echo "Starting production backend deployment..."
           cd apps/backend
 
           echo "Installing dependencies..."
@@ -79,27 +69,17 @@ jobs:
           echo "Generating Prisma client..."
           npm run prisma:generate
 
-          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
-            ENV="prod"
-            echo "Configuring production environment..."
-            cat > .env << EOF
-            DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}"
-            JWT_SECRET="${{ secrets.PROD_JWT_SECRET }}"
-            GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}"
-            GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}"
-            STAGE="prod"
-            EOF
-          else
-            ENV="dev"
-            echo "Configuring development environment..."
-            cat > .env << EOF
-            DATABASE_URL="${{ secrets.DEV_DATABASE_URL }}"
-            JWT_SECRET="${{ secrets.DEV_JWT_SECRET }}"
-            GOOGLE_CLIENT_ID="${{ secrets.DEV_GOOGLE_CLIENT_ID }}"
-            GOOGLE_CLIENT_SECRET="${{ secrets.DEV_GOOGLE_CLIENT_SECRET }}"
-            STAGE="dev"
-            EOF
-          fi
+          echo "Configuring production environment..."
+          cat > .env << EOF
+          DATABASE_URL="${{ secrets.PROD_DATABASE_URL }}"
+          JWT_SECRET="${{ secrets.PROD_JWT_SECRET }}"
+          GOOGLE_CLIENT_ID="${{ secrets.PROD_GOOGLE_CLIENT_ID }}"
+          GOOGLE_CLIENT_SECRET="${{ secrets.PROD_GOOGLE_CLIENT_SECRET }}"
+          STAGE="prod"
+          NODE_ENV="production"
+          AWS_REGION="ap-southeast-1"
+          EOF
+
           echo "Running database migrations..."
           npm run prisma:deploy
 
@@ -107,21 +87,16 @@ jobs:
           npm install -g serverless@3
 
           echo "Deploying serverless functions..."
-          npm run deploy:$ENV
+          npm run deploy:prod
 
-          echo "Backend deployed to $ENV"
+          echo "Backend deployed to production"
 
       - name: Test Deployment
         if: contains(inputs.what, 'backend') || contains(inputs.what, 'everything')
         run: |
           echo "Running post-deployment tests..."
-          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
-            URL="${{ vars.API_URL_PROD }}"
-            echo "Testing production API at $URL"
-          else
-            URL="${{ vars.API_URL_DEV }}"
-            echo "Testing development API at $URL"
-          fi
+          URL="${{ vars.API_URL_PROD }}"
+          echo "Testing production API at $URL"
 
           echo "Running API health checks..."
           echo "  Testing categories endpoint..."
@@ -143,22 +118,15 @@ jobs:
       - name: Deployment Complete
         run: |
           echo "=============================="
-          echo "Deployment Summary"
+          echo "PRODUCTION DEPLOYMENT SUMMARY"
           echo "=============================="
           echo ""
           echo "Component: ${{ inputs.what }}"
           echo "Status: Completed Successfully"
           echo "Time: $(date)"
           echo ""
-
-          if [[ "${{ inputs.what }}" == *"prod"* ]]; then
-            echo "Production Environment:"
-            echo "  API: ${{ vars.API_URL_PROD }}"
-            echo "  Documentation: ${{ vars.API_URL_PROD }}/docs"
-          else
-            echo "Development Environment:"
-            echo "  API: ${{ vars.API_URL_DEV }}"
-            echo "  Documentation: ${{ vars.API_URL_DEV }}/docs"
-          fi
+          echo "Production Environment:"
+          echo "  API: ${{ vars.API_URL_PROD }}"
+          echo "  Documentation: ${{ vars.API_URL_PROD }}/docs"
           echo ""
-          echo "Deployment completed successfully!"
+          echo "Production deployment completed successfully!"

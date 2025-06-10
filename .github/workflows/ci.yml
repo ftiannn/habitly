@@ -10,6 +10,7 @@ jobs:
   test:
     name: Test & Build
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - name: Checkout Code
@@ -37,6 +38,8 @@ jobs:
         run: |
           echo "Testing Backend with Production Environment..."
           npm ci
+
+          echo "{{ secrets.PROD_DATABASE_URL }}"
           
           echo "Prisma schema validation..."
           npm run prisma:validate
