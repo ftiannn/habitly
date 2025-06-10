@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "types": ["node", "jest"],
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["apps/backend/src/*"]
+      }
+    }
+  }
+  
