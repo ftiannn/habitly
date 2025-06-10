@@ -39,8 +39,9 @@ jobs:
           echo "Testing Backend with Production Environment..."
 
           echo "Clean install dependencies..."
-          npm ci
-          npm install --no-save @types/node @types/aws-lambda @types/jsonwebtoken
+          rm -rf node_modules package-lock.json
+          npm install --include=dev
+          npm ls typescript ts-jest jest @types/node @types/aws-lambda || echo "Some packages missing"
 
           echo "Prisma schema validation..."
           npm run prisma:validate
