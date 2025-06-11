@@ -15,8 +15,6 @@ export const handler = async (_event: APIGatewayProxyEventV2): Promise<APIGatewa
         }
         apiUrl = apiUrl.replace(/\/$/, '');
 
-        console.log('API URL:', apiUrl);
-
         const injectedYaml = rawYaml.replace('{{SERVER_URL}}', apiUrl);
 
 

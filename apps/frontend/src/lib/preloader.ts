@@ -86,7 +86,6 @@ class DataPreloader {
   preloadOnHover(target: 'calendar' | 'profile') {
     switch (target) {
       case 'calendar':
-        console.log('TODO: call habit calendar')
         break;
       case 'profile':
         this.preloadProfile()

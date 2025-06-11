@@ -389,73 +389,7 @@ export const authService = {
     const hasValidAccessToken = this.getToken() && !this.isTokenExpired();
     const hasValidRefreshToken = this.getRefreshToken() && !this.isRefreshTokenExpired();
   
-    console.log('Auth status:', {
-      hasAccessToken: !!this.getToken(),
-      accessTokenExpired: this.isTokenExpired(),
-      hasRefreshToken: !!this.getRefreshToken(),
-      refreshTokenExpired: this.isRefreshTokenExpired(),
-      hasValidAuth: hasValidAccessToken || hasValidRefreshToken
-    });
-  
     return hasValidAccessToken || hasValidRefreshToken;
-  },
-  
-
-  // ======= TESTING UTILITIES =======
-  // These methods are for testing purposes only
-
-  /**
-   * 🧪 TEST UTILITY: Get token expiration info for debugging
-   * @returns Object with token expiration details
-   */
-  getTokenInfo(): { accessToken: TokenInfo; refreshToken: TokenInfo } | null {
-    const accessToken = this.getToken();
-    const refreshToken = this.getRefreshToken();
-
-    if (!accessToken || !refreshToken) return null;
-
-    try {
-      const parseToken = (token: string) => {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return {
-          exp: payload.exp,
-          expiresAt: new Date(payload.exp * 1000).toISOString(),
-          isExpired: payload.exp * 1000 < Date.now(),
-          timeUntilExpiry: Math.max(0, payload.exp * 1000 - Date.now())
-        };
-      };
-
-      return {
-        accessToken: parseToken(accessToken),
-        refreshToken: parseToken(refreshToken)
-      };
-    } catch (error) {
-      console.error('Error parsing token info:', error);
-      return null;
-    }
-  },
-
-  /**
-   * 🧪 TEST UTILITY: Manually expire access token for testing
-   * WARNING: This modifies your token for testing purposes only!
-   */
-  expireAccessTokenForTesting(): void {
-    const token = this.getToken();
-    if (!token) return;
-
-    try {
-      const [header, payload, signature] = token.split('.');
-      const decodedPayload = JSON.parse(atob(payload));
-
-      decodedPayload.exp = Math.floor(Date.now() / 1000) - 60;
-
-      const expiredPayload = btoa(JSON.stringify(decodedPayload));
-      const expiredToken = `${header}.${expiredPayload}.${signature}`;
-
-      this.setToken(expiredToken);
-    } catch (error) {
-      console.error('Failed to expire token for testing:', error);
-    }
   },
 
   stayLoggedIn(): boolean {

@@ -17,6 +17,7 @@ A full-featured habit-tracking app designed for modern users — available acros
 
 ## 🏗️ Monorepo Structure
 
+```
 habitly/
 ├── apps/
 │ ├── backend/ # Serverless API (Node.js, Prisma)
@@ -26,6 +27,7 @@ habitly/
 ├── docs/ # Internal documentation (WIP)
 ├── package.json # Shared dependencies and workspace config
 └── README.md # This file
+```
 
 ---
 

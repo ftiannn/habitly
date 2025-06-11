@@ -47,9 +47,7 @@ export function validateEmail(email: string): boolean {
     return emailRegex.test(email);
 }
 
-export function handleAuthError(error: any) {
-    console.log('handleAuthError', error)
-    
+export function handleAuthError(error: any) {    
     switch (error.message) {
         case 'AUTHENTICATION_REQUIRED':
             return errorResponse('Authentication token required', 401);
