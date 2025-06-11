@@ -15,6 +15,7 @@ on:
       - "*.md"
       - "README.md"
       - "docs/**"
+  workflow_dispatch:
 
 jobs:
   setup:
