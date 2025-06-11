@@ -3,8 +3,18 @@ name: Test All Components
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/**'
+      - '*.md'
+      - 'README.md'
+      - 'docs/**'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '.github/**'
+      - '*.md'
+      - 'README.md'
+      - 'docs/**'
 
 jobs:
   test:
