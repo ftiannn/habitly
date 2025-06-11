@@ -85,6 +85,16 @@ Secrets and parameters are stored in AWS Secrets Manager and SSM respectively.
 
 ---
 
+## API Reference
+
+The complete API specification is available via Swagger:
+
+👉 [View full API docs](https://api.myhabitly.com/docs)
+
+These docs are auto-generated and kept up to date with every deployment. You can try endpoints directly from the browser and inspect request/response formats.
+
+---
+
 ## License
 
 © 2025 FT Tan. All rights reserved. For inspiration and educational use only.
