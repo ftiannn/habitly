@@ -11,67 +11,128 @@ on:
           - infrastructure-prod
           - backend-prod
           - everything-prod
+      commit:
+        description: "Commit to deploy (SHA, branch, or tag)"
+        required: false
+        type: string
+        default: "main"
       confirm:
         description: 'Type "GO" to confirm'
         required: true
         type: string
 
 jobs:
-  # New job to check CI status
+  # Check CI status for the selected commit
   check-ci-status:
     name: Check CI Status
     runs-on: ubuntu-latest
     outputs:
       ci-passed: ${{ steps.ci-check.outputs.ci-passed }}
+      commit-sha: ${{ steps.resolve-commit.outputs.commit-sha }}
+      commit-message: ${{ steps.resolve-commit.outputs.commit-message }}
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history to resolve commits
       
-      - name: Check CI Status
+      - name: Resolve Commit
+        id: resolve-commit
+        run: |
+          # Resolve the commit reference to a full SHA
+          COMMIT_REF="${{ inputs.commit }}"
+          echo "Resolving commit reference: $COMMIT_REF"
+          
+          # Get the full SHA
+          COMMIT_SHA=$(git rev-parse "$COMMIT_REF")
+          echo "Resolved to SHA: $COMMIT_SHA"
+          
+          # Get commit message
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s" "$COMMIT_SHA")
+          echo "Commit message: $COMMIT_MESSAGE"
+          
+          # Get commit author and date
+          COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an" "$COMMIT_SHA")
+          COMMIT_DATE=$(git log -1 --pretty=format:"%ad" --date=short "$COMMIT_SHA")
+          
+          echo "commit-sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          echo "commit-message=$COMMIT_MESSAGE" >> $GITHUB_OUTPUT
+          
+          echo "📋 DEPLOYMENT DETAILS:"
+          echo "  Commit: $COMMIT_SHA"
+          echo "  Message: $COMMIT_MESSAGE"
+          echo "  Author: $COMMIT_AUTHOR"
+          echo "  Date: $COMMIT_DATE"
+      
+      - name: Check CI Status for Selected Commit
         id: ci-check
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: checks } = await github.rest.checks.listForRef({
+            const commitSha = '${{ steps.resolve-commit.outputs.commit-sha }}';
+            
+            // Get workflow runs for this specific commit
+            const { data: workflowRuns } = await github.rest.actions.listWorkflowRunsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: context.sha,
-              status: 'completed'
+              head_sha: commitSha,
+              per_page: 50
             });
             
-            const { data: statuses } = await github.rest.repos.listCommitStatusesForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: context.sha
-            });
-            
-            const ciCheck = checks.check_runs.find(check => 
-              check.name === 'Test & Build' || 
-              check.app.slug === 'github-actions'
+            // Look for CI/test workflow
+            const ciRun = workflowRuns.workflow_runs.find(run => 
+              run.name === 'Test All Components' || 
+              run.path === '.github/workflows/ci.yml'
             );
             
-            if (ciCheck && ciCheck.conclusion === 'success') {
-              console.log('✅ CI checks passed');
-              core.setOutput('ci-passed', 'true');
-            } else {
-              console.log('❌ CI checks not passing');
+            if (!ciRun) {
+              console.log('❌ No CI workflow run found for this commit');
               core.setOutput('ci-passed', 'false');
-              core.setFailed('CI checks must pass before deployment');
+              core.setFailed(`No CI workflow run found for commit ${commitSha.substring(0, 8)}`);
+              return;
+            }
+            
+            console.log(`Found CI run: ${ciRun.html_url}`);
+            console.log(`Status: ${ciRun.status}, Conclusion: ${ciRun.conclusion}`);
+            
+            if (ciRun.conclusion === 'success') {
+              console.log('✅ CI checks passed for selected commit');
+              core.setOutput('ci-passed', 'true');
+            } else if (ciRun.status === 'in_progress') {
+              console.log('⏳ CI is still running for this commit');
+              core.setOutput('ci-passed', 'false');
+              core.setFailed('CI is still running. Wait for it to complete before deploying.');
+            } else {
+              console.log('❌ CI checks failed for selected commit');
+              core.setOutput('ci-passed', 'false');
+              core.setFailed(`CI workflow ${ciRun.conclusion} for commit ${commitSha.substring(0, 8)}`);
             }
 
   deploy:
     name: Deploy ${{ inputs.what }}
     runs-on: ubuntu-latest
     environment: production
-    needs: check-ci-status  # Wait for CI check
+    needs: check-ci-status
     if: inputs.confirm == 'GO' && needs.check-ci-status.outputs.ci-passed == 'true'
 
     env:
       API_URL_PROD: ${{ vars.API_URL_PROD }}
 
     steps:
-      - name: Checkout
+      - name: Checkout Selected Commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check-ci-status.outputs.commit-sha }}
+
+      - name: Deployment Info
+        run: |
+          echo "🚀 STARTING DEPLOYMENT"
+          echo "======================================"
+          echo "Component: ${{ inputs.what }}"
+          echo "Commit: ${{ needs.check-ci-status.outputs.commit-sha }}"
+          echo "Message: ${{ needs.check-ci-status.outputs.commit-message }}"
+          echo "Environment: Production"
+          echo "======================================"
 
       - name: Setup AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -167,12 +228,22 @@ jobs:
           echo "PRODUCTION DEPLOYMENT SUMMARY"
           echo "=============================="
           echo ""
-          echo "Component: ${{ inputs.what }}"
-          echo "Status: Completed Successfully"
-          echo "Time: $(date)"
+          echo "✅ Component: ${{ inputs.what }}"
+          echo "✅ Commit: ${{ needs.check-ci-status.outputs.commit-sha }}"
+          echo "✅ Message: ${{ needs.check-ci-status.outputs.commit-message }}"
+          echo "✅ Status: Completed Successfully"
+          echo "✅ Time: $(date)"
           echo ""
           echo "Production Environment:"
           echo "  API: ${{ vars.API_URL_PROD }}"
           echo "  Documentation: ${{ vars.API_URL_PROD }}/docs"
           echo ""
-          echo "Production deployment completed successfully!"
+          echo "🎉 Production deployment completed successfully!"
+
+      - name: Create Deployment Tag
+        run: |
+          # Create a deployment tag for tracking
+          TAG_NAME="deploy-prod-$(date +%Y%m%d-%H%M%S)"
+          git tag "$TAG_NAME" ${{ needs.check-ci-status.outputs.commit-sha }}
+          git push origin "$TAG_NAME"
+          echo "Created deployment tag: $TAG_NAME"
