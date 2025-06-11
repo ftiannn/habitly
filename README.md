@@ -72,12 +72,12 @@ habitly/
 
 Habitly is live and production-ready.
 
-| Component  | Platform        | URL                          |
-| ---------- | --------------- | ---------------------------- |
-| Frontend   | Vercel          | https://app.myhabitly.com    |
-| Backend    | AWS Lambda      | https://api.myhabitly.com    |
-| Mobile     | Capacitor (WIP) | Deployed manually to devices |
-| Infra Code | Terraform       | `infrastructure/` folder     |
+| Component  | Platform        | URL                            |
+| ---------- | --------------- | ------------------------------ |
+| Frontend   | Vercel          | https://app.myhabitly.com      |
+| Backend    | AWS Lambda      | https://api.myhabitly.com/docs |
+| Mobile     | Capacitor (WIP) | Deployed manually to devices   |
+| Infra Code | Terraform       | `infrastructure/` folder       |
 
 ---
 
