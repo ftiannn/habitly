@@ -1,154 +1,160 @@
-# 🌱 Habitly
+# Habitly
 
-A full-featured habit-tracking app designed for modern users — available across web and mobile platforms. Built with a monorepo architecture and powered by a robust CI/CD pipeline, Habitly provides users with everything from streak tracking and gamification to push notifications and offline support.
-
----
-
-## 🔧 Tech Stack
-
-| Layer         | Tech                                             |
-|---------------|--------------------------------------------------|
-| Frontend      | React, Vite, Capacitor (iOS/Android)             |
-| Backend       | Node.js, Serverless Framework                    |
-| Database      | Neon PostgreSQL, Prisma ORM                      |
-| Infrastructure| AWS (Terraform), Cloudflare, GitHub Actions CI/CD|
+**Habitly** is a modern, full-featured habit-tracking application built for web and mobile. Designed to help users build lasting habits through gamification, streak tracking, push notifications, and an intuitive UI — all supported by a robust infrastructure and CI/CD pipeline.
 
 ---
 
-## 🏗️ Monorepo Structure
+## Tech Stack
+
+| Layer          | Technologies                                        |
+| -------------- | --------------------------------------------------- |
+| Frontend       | React, Vite, Capacitor (iOS/Android)                |
+| Backend        | Node.js, Serverless Framework                       |
+| Database       | Neon PostgreSQL, Prisma ORM                         |
+| Infrastructure | AWS (Terraform), Cloudflare, GitHub Actions (CI/CD) |
+
+---
+
+## Monorepo Structure
 
 ```
 habitly/
 ├── apps/
-│ ├── backend/ # Serverless API (Node.js, Prisma)
-│ └── frontend/ # React Web App with Capacitor Mobile Support
-├── infrastructure/ # Terraform-based AWS Infrastructure
-├── scripts/ # Automation scripts (optional - WIP)
+│ ├── backend/ # Node.js API with Serverless Framework
+│ └── frontend/ # React Web App + Capacitor for mobile
+├── infrastructure/ # AWS Infrastructure (Terraform)
+├── scripts/ # Automation scripts (optional)
 ├── docs/ # Internal documentation (WIP)
-├── package.json # Shared dependencies and workspace config
-└── README.md # This file
+├── package.json # Workspace configuration and shared deps
+└── README.md # Root project overview
 ```
 
 ---
 
-## ✅ Key Features
+## Features Overview
 
-### 🔐 Authentication
+### Authentication
+
 - Email/password login
 - Google OAuth integration
-- JWT with refresh tokens
-- Secure password change flow
+- Secure JWT handling with refresh tokens
+- Password change support
 
-### 🧠 Habit Tracking
-- Custom schedules (daily, weekly, flexible)
-- Completion history & mood tracking
-- Notes, categories, and filtering
+### Habit Tracking
 
-### 🎯 Gamification
-- Badge & achievement system
-- Streaks and celebrations
-- Motivational quotes and rewards
+- Create habits with daily, weekly, or custom schedules
+- Track completions, moods, and notes
+- Filter by categories and tags
+- View detailed progress and statistics
 
-### 📱 Mobile-Ready
-- Native iOS & Android app via Capacitor
-- Push notifications
-- Offline mode with sync
+### Gamification & Motivation
 
-### ⚙️ Infrastructure
-- Terraform-managed AWS setup
-- API Gateway, Lambda, S3, Secrets Manager
-- CI/CD with GitHub Actions
-- Secure token handling & environment separation
+- Achievement badges and milestones
+- Streak tracking with celebrations
+- Motivational quotes and progress rewards
 
----
+### Mobile Support
 
-## 🚀 Deployment
+- iOS and Android apps via Capacitor
+- Push notifications for reminders
+- Offline support with sync on reconnect
 
-Habitly is fully deployed and production-ready.
+### Infrastructure & DevOps
 
-- **Frontend**: Hosted via CDN, mobile built with Capacitor
-- **Backend**: Deployed with Serverless Framework to AWS Lambda
-- **API**: `https://api.myhabitly.com`
-- **Infrastructure**: Provisioned using Terraform (`infrastructure/`)
+- Modular AWS Terraform setup (Lambda, S3, API Gateway)
+- GitHub Actions CI/CD for builds, validation, and deployments
+- Secrets and parameters managed with AWS services
+- Separate environments: dev, staging, and prod
 
 ---
 
-## 🧪 Testing & Quality
+## Deployment
 
-| Type           | Status              |
-|----------------|---------------------|
-| Backend Tests  | ✅ 25+ Postman cases |
-| Frontend Tests | 🚧 Some unit tests   |
-| E2E Tests      | 🚧 Partial           |
-| Performance    | 🔜 Planned           |
-| Security       | ⚠️ `npm audit` only  |
+Habitly is live and production-ready.
 
----
-
-## 📈 CI/CD Workflow
-
-- GitHub Actions triggers on push & PRs
-- Validates:
-  - Backend build & packaging
-  - Frontend TypeScript & build output
-  - Terraform formatting & validation
-  - Security audit on both apps
-- Manual deploy approval via workflow inputs
+| Component  | Platform        | URL                          |
+| ---------- | --------------- | ---------------------------- |
+| Frontend   | Vercel          | https://app.myhabitly.com    |
+| Backend    | AWS Lambda      | https://api.myhabitly.com    |
+| Mobile     | Capacitor (WIP) | Deployed manually to devices |
+| Infra Code | Terraform       | `infrastructure/` folder     |
 
 ---
 
-## 📦 Packages & Tools Used
+## Testing & Quality Assurance
 
-**Frontend**: React, Vite, Capacitor, TailwindCSS  
-**Backend**: Node.js, Serverless Framework, Prisma  
-**Infrastructure**: Terraform (modular), CloudWatch, SSM, Secrets Manager  
-**Dev Tools**: ESLint, Prettier, TypeScript, GitHub Actions
-
----
-
-## 🔒 Environments & Secrets
-
-| Type           | Tool                    |
-|----------------|-------------------------|
-| Secrets        | AWS Secrets Manager     |
-| Params         | AWS SSM Parameter Store |
-| Domains        | Cloudflare DNS          |
-| SSL            | AWS ACM (auto-renewal)  |
-| Logging        | CloudWatch              |
+| Area            | Status                     |
+| --------------- | -------------------------- |
+| Backend         | ✅ 25+ Postman test cases  |
+| Frontend        | 🚧 Partial unit test suite |
+| E2E Integration | 🚧 Incomplete              |
+| Performance     | 🔜 Planned load testing    |
+| Security        | ⚠️ `npm audit` coverage    |
 
 ---
 
-### ✅ Completed
-- MVP: Authentication, Habit Tracking, Gamification, Push Notifications
+## CI/CD Workflow
 
-### 🔄 In Progress
-- Add full test coverage (Frontend & Integration)
+Powered by GitHub Actions:
 
-### 🔜 Upcoming
-- Launch onboarding & analytics
-- Add WAF, backups, and rate limiting
-
-**Legend**  
-✅ Completed | 🔄 In Progress | 🔜 Not Started
+- Runs on every push and PR
+- Validates frontend and backend builds
+- Checks TypeScript and lint rules
+- Formats Terraform code and validates plans
+- Security checks using npm audit
+- Supports manual approval and environment inputs
 
 ---
 
-## 🧠 Inspiration
+## Tooling & Packages
 
-Habitly was created to combine productivity, psychology, and gamification — helping users build better habits in a joyful and sustainable way.
-
----
-
-## 👩‍💻 Author
-
-Built with ❤️ by FT Tan
-This project is shared for inspiration — feel free to reach out if you're curious.
+- **Frontend**: React, Vite, Capacitor, TailwindCSS
+- **Backend**: Node.js, Serverless Framework, Prisma
+- **Infra**: Terraform, CloudWatch, SSM, Secrets Manager
+- **Dev Tools**: TypeScript, ESLint, Prettier, GitHub Actions
 
 ---
 
-## 📄 License
+## Environment & Secret Management
 
-© 2025 FT Tan  
-This work is licensed under a [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+| Item          | Tool/Platform           |
+| ------------- | ----------------------- |
+| Secrets       | AWS Secrets Manager     |
+| Config Params | AWS SSM Parameter Store |
+| Domains       | Cloudflare DNS          |
+| SSL Certs     | AWS ACM (auto-renewed)  |
+| Logging       | AWS CloudWatch          |
 
-Feel free to explore the project, but do not reuse, modify, or distribute without permission.
+---
+
+## Project Milestones
+
+| Status      | Description                                             |
+| ----------- | ------------------------------------------------------- |
+| ✅ Complete | MVP (auth, tracking, gamification, mobile push)         |
+| 🔄 Ongoing  | Test coverage and analytics                             |
+| 🔜 Planned  | User onboarding, WAF, backups, advanced infra hardening |
+
+---
+
+## Inspiration
+
+Habitly was born from the desire to combine productivity with psychology and play. It helps users form better habits through engaging design, data-driven insights, and delightful interactions.
+
+---
+
+## About
+
+Created by **FT Tan**  
+This project is shared as inspiration and demonstration of end-to-end app development.
+
+---
+
+## License
+
+© 2025 FT Tan.  
+This project is licensed under the [Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+
+---
+
+_Please do not reuse, modify, or redistribute without permission._
