@@ -28,6 +28,7 @@ jobs:
 
   backend:
     name: Test Backend
+    environment: production
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -72,6 +73,7 @@ jobs:
 
   frontend:
     name: Test Frontend
+    environment: production
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -104,6 +106,7 @@ jobs:
 
   infrastructure:
     name: Validate Infrastructure
+    environment: production
     runs-on: ubuntu-latest
     needs: setup
     steps:
@@ -125,6 +128,7 @@ jobs:
 
   security:
     name: Security Audit
+    environment: production
     runs-on: ubuntu-latest
     needs: setup
     steps:
