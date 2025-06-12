@@ -1,12 +1,12 @@
 # Habitly
 
-<p align="center">
-  <img src="https://cpfcwrekrexf3svp.public.blob.vercel-storage.com/Habitly%20%281%29-dy56MiVjYrE8bEigVjR44tCpW6J9ET.png" alt="Habitly Logo" width="200"/>
-</p>
-
-
 **Habitly** is a modern, full-featured habit-tracking application built for web and mobile. Designed to help users build lasting habits through gamification, streak tracking, push notifications, and an intuitive UI — all supported by a robust infrastructure and CI/CD pipeline.
 
+
+<p align="center">
+<!--   <img src="https://cpfcwrekrexf3svp.public.blob.vercel-storage.com/Habitly%20%281%29-dy56MiVjYrE8bEigVjR44tCpW6J9ET.png" alt="Habitly Logo" width="200"/> -->
+  <img src="https://media.licdn.com/dms/image/v2/D562DAQFYAOQ_-uWJeA/profile-treasury-image-shrink_8192_8192/B56ZdjibiXGoAk-/0/1749721662011?e=1750348800&v=beta&t=IgjqEXHHVzwUbWmaLOIA5rlNQ2grL2H_XW-So56uZ-M" alt="Habitly App" width="400"/>
+</p>
 ---
 
 ## Tech Stack
